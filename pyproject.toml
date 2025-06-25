@@ -1,7 +1,7 @@
 [project]
 name = "bolthackathon"
 version = "0.1.0"
-description = "Add your description here"
+description = "This is the backend code for the bolthackathon project"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
