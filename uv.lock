@@ -27,6 +27,18 @@ wheels = [
 ]
 
 [[package]]
+name = "appwrite"
+version = "11.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/93/67/90bef0abe93ca61e63dc2323a459ad4f3f09725d88d4edc7791a07dd30c0/appwrite-11.0.0.tar.gz", hash = "sha256:6a40f20a0d74fec6b1c2f276756dbba1c8789c8256544c1a035feffae8ff3437", size = 53808, upload-time = "2025-05-18T09:48:36.366Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/28/31/f996e798e9fb9644ad876030eca95cda872b8f4b83581da35fa6a99c7cbe/appwrite-11.0.0-py3-none-any.whl", hash = "sha256:dd363769bd975ff72ab83a9e4f37534f9e3b08c20c5e1328cfed5920d979f33a", size = 67047, upload-time = "2025-05-18T09:48:34.988Z" },
+]
+
+[[package]]
 name = "asgiref"
 version = "3.8.1"
 source = { registry = "https://pypi.org/simple" }
@@ -43,6 +55,7 @@ name = "bolthackathon"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "appwrite" },
     { name = "django" },
     { name = "django-cors-headers" },
     { name = "django-drf-otp" },
@@ -61,6 +74,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "appwrite", specifier = ">=11.0.0" },
     { name = "django", specifier = ">=5.2.3" },
     { name = "django-cors-headers", specifier = ">=4.7.0" },
     { name = "django-drf-otp", specifier = ">=0.0.11" },
