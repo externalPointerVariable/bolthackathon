@@ -51,11 +51,10 @@ class FileTranslator:
         return uploaded_files
 
 
-# --- Example usage ---
-if __name__ == "__main__":
-    url = "https://fra.cloud.appwrite.io/v1/storage/buckets/685d16e20006d61d0d65/files/685d16fd000488dbe536/view?project=685d16b5002d401cbf0c&mode=admin"
+# if __name__ == "__main__":
+#     url = "https://fra.cloud.appwrite.io/v1/storage/buckets/685d16e20006d61d0d65/files/685d16fd000488dbe536/view?project=685d16b5002d401cbf0c&mode=admin"
 
-    translator = FileTranslator()
-    results = translator.pdf_to_images(url)
-    for result in results:
-        print("Uploaded:", result["$id"], result["name"])
+#     translator = FileTranslator()
+#     results = translator.pdf_to_images(url)
+#     for result in results:
+#         print("Uploaded:", result["$id"], result["name"])
