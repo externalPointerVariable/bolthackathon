@@ -18,7 +18,7 @@
     .venv/bin/activate
     uv pip install -r requirements.txt 
     ```
-5. Once you do all this step, now you can start the server
+5. Once you do all the above steps, now you can start the server
     ```python
     cd app
     uv run manage.py runserver

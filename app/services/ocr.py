@@ -86,5 +86,5 @@ class OCR:
         except Exception as e:
             print(f"Deserialization error: {e}")
 
-if __name__ == "__main__":
-    OCR().recognize_text()
+# if __name__ == "__main__":
+#     OCR().recognize_text()

@@ -18,6 +18,7 @@ class UserSession(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sessions')
     session_name = models.CharField(max_length=40, unique=True)
     session_activity = models.TextField(blank=True, null=True)
+    pdf_image_urls = models.TextField(blank=True, null=True)
     document_embeddings = models.JSONField(blank=True, null=True)
     last_activity = models.DateTimeField(default=timezone.now)
 
@@ -34,3 +35,4 @@ class UserSession(models.Model):
 
 class ChatSessions(models.Model):
     session = models.ForeignKey(UserSession, on_delete=models.CASCADE, related_name='chat_sessions')
+    chat_history = models.JSONField(blank=True, null=True)
