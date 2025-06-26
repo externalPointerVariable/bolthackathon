@@ -5,6 +5,8 @@ from appwrite.services.storage import Storage
 from config.config import appwrite_api_key, appwrite_endpoint, appwrite_project_id, appwrite_bucket_id
 from pdf2image import convert_from_bytes
 from urllib.parse import urlparse
+from django.utils import timezone
+from user.models import UserSession
 
 
 class FileTranslator:
@@ -14,20 +16,21 @@ class FileTranslator:
         self.storage = Storage(self.client)
 
     def upload_file(self, file_path, remote_filename=None):
-        """Uploads a file to Appwrite storage."""
         with open(file_path, 'rb') as f:
-            return self.storage.create_file(
+            result = self.storage.create_file(
                 bucket_id=appwrite_bucket_id,
                 file_id='unique()',
                 file=f,
-                name=remote_filename or os.path.basename(file_path)
+                name=remote_filename or os.path.basename(file_path),
+                permissions=["read(\"*\")"]  # Make file public
             )
+        file_id = result["$id"]
+        public_url = f"{appwrite_endpoint}/v1/storage/buckets/{appwrite_bucket_id}/files/{file_id}/view?project={appwrite_project_id}"
+        return public_url
 
-    def pdf_to_images(self, pdf_public_url, output_folder="output"):
-        """Converts a public PDF URL to images and uploads them to Appwrite."""
+    def pdf_to_images_and_store(self, pdf_public_url, session_id, output_folder="output"):
         os.makedirs(output_folder, exist_ok=True)
 
-        # Get PDF bytes from Appwrite public link
         response = requests.get(pdf_public_url)
         if response.headers.get("Content-Type") != "application/pdf":
             raise ValueError("Invalid content type, expected PDF.")
@@ -35,26 +38,21 @@ class FileTranslator:
         pdf_bytes = response.content
         images = convert_from_bytes(pdf_bytes, dpi=300)
 
-        # Get a clean name to group images (like a folder prefix)
         pdf_name = os.path.splitext(os.path.basename(urlparse(pdf_public_url).path))[0]
+        public_image_urls = []
 
-        uploaded_files = []
         for i, image in enumerate(images):
             filename = f"{pdf_name}_page_{i+1}.jpg"
             filepath = os.path.join(output_folder, filename)
             image.save(filepath, "JPEG")
 
-            # Upload to Appwrite
-            uploaded_file = self.upload_file(filepath, remote_filename=filename)
-            uploaded_files.append(uploaded_file)
+            public_url = self.upload_file(filepath, remote_filename=filename)
+            public_image_urls.append(public_url)
 
-        return uploaded_files
+        # Save public URLs to UserSession model
+        session = UserSession.objects.get(id=session_id)
+        session.pdf_image_urls = str(public_image_urls)  # or use json.dumps if preferred
+        session.last_activity = timezone.now()
+        session.save()
 
-
-# if __name__ == "__main__":
-#     url = "https://fra.cloud.appwrite.io/v1/storage/buckets/685d16e20006d61d0d65/files/685d16fd000488dbe536/view?project=685d16b5002d401cbf0c&mode=admin"
-
-#     translator = FileTranslator()
-#     results = translator.pdf_to_images(url)
-#     for result in results:
-#         print("Uploaded:", result["$id"], result["name"])
+        return public_image_urls
