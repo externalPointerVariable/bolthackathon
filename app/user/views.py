@@ -7,7 +7,7 @@ from datetime import date
 from rest_framework.views import APIView
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator
-from .serializers import RegisterSerializer, LoginSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer, UserProfileSerializer
+from .serializers import RegisterSerializer, LoginSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer, UserProfileSerializer, UserSessionSerializer
 
 class RegisterView(CreateAPIView):
     queryset = User.objects.all()
@@ -72,4 +72,14 @@ class UserProfileView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class CreateUserSessionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, format=None):
+        serializer = UserSessionSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            user_session = serializer.save()
+            return Response(UserSessionSerializer(user_session).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
