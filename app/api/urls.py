@@ -1,4 +1,4 @@
-from django.urls import path,  get_resolver, include
+from django.urls import path,  get_resolver
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -23,7 +23,6 @@ def welcomeAPI(request):
 
 urlpatterns = [
     path("", welcomeAPI, name="welcome"),
-    path("api-auth/", include("rest_framework.urls")),
     path("register/", RegisterView.as_view(), name="register"),
     path("login/", LoginView.as_view(), name="login"),
     path("password-reset/", PasswordResetView.as_view(), name="password_reset"),
@@ -32,5 +31,5 @@ urlpatterns = [
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     # User endpoint
     path("profile/", UserProfileView.as_view(), name="user_profile"),
-    path('api/user-sessions/create/', CreateUserSessionView.as_view(), name='create-user-session'),
+    path('user-sessions/create/', CreateUserSessionView.as_view(), name='create-user-session'),
 ]

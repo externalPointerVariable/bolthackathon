@@ -3,7 +3,6 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.generics import CreateAPIView
 from django.contrib.auth.models import User
-from datetime import date
 from rest_framework.views import APIView
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator

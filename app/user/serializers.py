@@ -132,19 +132,20 @@ class UserSessionSerializer(serializers.ModelSerializer):
             'document_embeddings',
             'last_activity',
         ]
-        read_only_fields = ['id', 'last_activity']
+        read_only_fields = ['id', 'last_activity', 'user', 'session_name']
 
     def get_pdf_image_urls(self, obj):
         try:
             return json.loads(obj.pdf_image_urls or "[]")
-        except json.JSONDecodeError:
+        except Exception:
             return []
 
     def create(self, validated_data):
-        user = validated_data.get('user')
-        session_name = validated_data.get('session_name')
-        specifications = self.context['request'].data.get('specifications') 
-        pdf_public_url = self.context['request'].data.get('pdf_public_url') 
+        user = self.context['request'].user
+        pdf_public_url = self.context['request'].data.get('pdf_public_url')
+        specifications = self.context['request'].data.get('specifications')
+
+        session_name = bot.create_session_name(finalized_text)
 
         file_translator = FileTranslator()
         bot = AzureChatbot()
@@ -154,6 +155,7 @@ class UserSessionSerializer(serializers.ModelSerializer):
             public_img_urls = file_translator.convert_pdf_to_images(pdf_public_url)
             ocr_texts = [ocr_service.extract_text_from_image(url) for url in public_img_urls]
             finalized_text = bot.transform_document(ocr_texts, specifications) if specifications else None
+
             user_session = UserSession.objects.create(
                 user=user,
                 session_name=session_name,
@@ -161,15 +163,10 @@ class UserSessionSerializer(serializers.ModelSerializer):
                 pdf_image_urls=json.dumps(public_img_urls),
                 document_embeddings=finalized_text
             )
-        else:
-            user_session = UserSession.objects.create(
-                user=user,
-                session_name=session_name,
-                session_activity=specifications
-            )
+            return user_session
 
-        return user_session
-
+        raise serializers.ValidationError("pdf_public_url is required.")
+    
     def update(self, instance, validated_data):
         instance.session_name = validated_data.get('session_name', instance.session_name)
         instance.session_activity = validated_data.get('session_activity', instance.session_activity)

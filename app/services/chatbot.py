@@ -42,6 +42,19 @@ class AzureChatbot:
         )
         document = response.choices[0].message.content
         return document
+    
+    def create_session_name(self, final_documnt: Any):
+        response = self.client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that generates unique session names."},
+                {"role": "user", "content": f"Generate a unique session name for a user session based on the following document: {final_documnt}"}
+            ],
+            temperature=0.7,
+            top_p=1.0,
+            model=self.model
+        )
+        session_name = response.choices[0].message.content.strip()
+        return session_name
 
 # if __name__ == "__main__":
 
