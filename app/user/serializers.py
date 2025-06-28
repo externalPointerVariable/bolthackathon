@@ -7,7 +7,6 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import UserProfile, UserSession, ChatSessions
 from services.filetranslator import FileTranslator
-from services.ocr import OCR
 from services.chatbot import AzureChatbot
 from django.core.mail import send_mail
 import random
@@ -145,29 +144,54 @@ class UserSessionSerializer(serializers.ModelSerializer):
         pdf_public_url = self.context['request'].data.get('pdf_public_url')
         specifications = self.context['request'].data.get('specifications')
 
-
         file_translator = FileTranslator()
         bot = AzureChatbot()
-        ocr_service = OCR()
 
         if pdf_public_url:
             public_img_urls = file_translator.pdf_to_images_and_store(pdf_public_url)
             ocr_texts = [bot.image_to_text(url) for url in public_img_urls]
             finalized_text = bot.transform_document(ocr_texts, specifications) if specifications else None
-            session_name = bot.create_session_name(finalized_text)  # or use timestamp
+            session_name = bot.create_session_name(finalized_text)
+
             user_session = UserSession.objects.create(
                 user=user,
                 session_name=session_name,
                 session_activity=specifications,
                 pdf_image_urls=json.dumps(public_img_urls),
+                ocr_text="\n".join(ocr_texts) if ocr_texts else None,
                 document_embeddings=finalized_text
             )
             return user_session
 
         raise serializers.ValidationError("pdf_public_url is required.")
-    
+
     def update(self, instance, validated_data):
         instance.session_name = validated_data.get('session_name', instance.session_name)
         instance.session_activity = validated_data.get('session_activity', instance.session_activity)
+        instance.save()
+        return instance
+
+class UserSessionDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserSession
+        fields = [
+            'id',
+            'user',
+            'session_name',
+            'session_activity',
+            'pdf_image_urls',
+            'document_embeddings',
+            'last_activity',
+        ]
+        read_only_fields = ['id', 'last_activity', 'user']
+
+    def update(self, instance, validated_data):
+        bot = AzureChatbot()
+
+        instance.session_name = validated_data.get('session_name', instance.session_name)
+        instance.session_activity = validated_data.get('session_activity', instance.session_activity)
+        ocr_text = instance.ocr_text or validated_data.get('ocr_text', None)
+        document_embeddings = bot.transform_document(ocr_text, instance.session_activity)
+        instance.document_embeddings = document_embeddings
         instance.save()
         return instance

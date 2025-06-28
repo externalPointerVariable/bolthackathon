@@ -3,10 +3,11 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.generics import CreateAPIView
 from django.contrib.auth.models import User
+from .models import UserSession, ChatSessions
 from rest_framework.views import APIView
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator
-from .serializers import RegisterSerializer, LoginSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer, UserProfileSerializer, UserSessionSerializer
+from .serializers import RegisterSerializer, LoginSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer, UserProfileSerializer, UserSessionSerializer, UserSessionDetailSerializer
 
 class RegisterView(CreateAPIView):
     queryset = User.objects.all()
@@ -73,12 +74,41 @@ class UserProfileView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-class CreateUserSessionView(APIView):
+class UserSessionView(APIView):
     permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        user_sessions = UserSession.objects.filter(user=request.user)
+        serializer = UserSessionSerializer(user_sessions, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, format=None):
         serializer = UserSessionSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             user_session = serializer.save()
             return Response(UserSessionSerializer(user_session).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class UserSessionDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk, format=None):
+        try:
+            user_session = UserSession.objects.get(pk=pk, user=request.user)
+        except UserSession.DoesNotExist:
+            return Response({"error": "User session not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = UserSessionDetailSerializer(user_session, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk, format=None):
+        try:
+            user_session = UserSession.objects.get(pk=pk, user=request.user)
+        except UserSession.DoesNotExist:
+            return Response({"error": "User session not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = UserSessionDetailSerializer(user_session, data=request.data, partial=True, context={'request': request})
+        if serializer.is_valid():
+            updated_session = serializer.save()
+            return Response(UserSessionDetailSerializer(updated_session, context={'request': request}).data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

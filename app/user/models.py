@@ -19,6 +19,7 @@ class UserSession(models.Model):
     session_name = models.CharField(max_length=40, unique=True)
     session_activity = models.TextField(blank=True, null=True)
     pdf_image_urls = models.TextField(blank=True, null=True)
+    ocr_text = models.TextField(blank=True, null=True)
     document_embeddings = models.JSONField(blank=True, null=True)
     last_activity = models.DateTimeField(default=timezone.now)
 
