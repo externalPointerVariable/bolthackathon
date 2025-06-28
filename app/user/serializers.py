@@ -195,3 +195,17 @@ class UserSessionDetailSerializer(serializers.ModelSerializer):
         instance.document_embeddings = document_embeddings
         instance.save()
         return instance
+
+class ChatSessionsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatSessions
+        fields = ['id', 'session', 'chat_history']
+        read_only_fields = ['id', 'session']
+
+    def create(self, validated_data):
+        return ChatSessions.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.chat_history = validated_data.get('chat_history', instance.chat_history)
+        instance.save()
+        return instance

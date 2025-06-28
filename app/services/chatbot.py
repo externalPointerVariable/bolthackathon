@@ -74,7 +74,7 @@ class AzureChatbot:
         response = self.client.chat.completions.create(
             messages=[
                 {"role": "system", "content": f"You are a helpful assistant that transforms documents according to the provided specification {specifactions}."},
-                {"role": "user", "content": f"Transform the following document text according to the specifications: {specifactions}\n\nDocument Text: {document_text}"}
+                {"role": "user", "content": f"Transform the following document text according to the specifications: {specifactions}\n\nDocument Text: {document_text} leave the tanle and diagram as it is and also the numericals"}
             ],
             temperature=0.7,
             top_p=1.0,

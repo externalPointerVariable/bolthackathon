@@ -112,3 +112,22 @@ class UserSessionDetailView(APIView):
             updated_session = serializer.save()
             return Response(UserSessionDetailSerializer(updated_session, context={'request': request}).data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class ChatSessionsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, session_id, format=None):
+        try:
+            chat_sessions = ChatSessions.objects.filter(session__id=session_id)
+        except ChatSessions.DoesNotExist:
+            return Response({"error": "Chat sessions not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = UserSessionSerializer(chat_sessions, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, session_id, format=None):
+        serializer = UserSessionSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            chat_session = serializer.save()
+            return Response(UserSessionSerializer(chat_session).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -2,7 +2,7 @@ from django.urls import path,  get_resolver
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework_simplejwt.views import TokenRefreshView
-from user.views import RegisterView, LoginView, PasswordResetView, PasswordResetConfirmView, UserProfileView, UserSessionView, UserSessionDetailView
+from user.views import RegisterView, LoginView, PasswordResetView, PasswordResetConfirmView, UserProfileView, UserSessionView, UserSessionDetailView, ChatSessionsView
 
 @api_view(["GET"])
 def welcomeAPI(request):
@@ -34,4 +34,5 @@ urlpatterns = [
     path("user-sessions/create/", UserSessionView.as_view(), name="create-user-session"),
     path("user-sessions/", UserSessionView.as_view(), name="user-session-list"),
     path("user-sessions/<int:pk>/", UserSessionDetailView.as_view(), name="user-session-detail"),
+    path("user_sessions/<int:pk>/chat-sessions/", ChatSessionsView.as_view(), name="chat-sessions-list"),
 ]
