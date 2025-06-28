@@ -5,7 +5,10 @@ from django.utils.encoding import force_bytes
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import UserProfile
+from .models import UserProfile, UserSession, ChatSessions
+from services.filetranslator import FileTranslator
+from services.ocr import OCR
+from services.chatbot import AzureChatbot
 from django.core.mail import send_mail
 import random
 from django.conf import settings
@@ -112,3 +115,58 @@ class UserProfileSerializer(serializers.ModelSerializer):
         instance.email = validated_data.get('email', instance.email)
         instance.save()
         return instance
+    
+class UserSessionSerializer(serializers.ModelSerializer):
+    pdf_image_urls = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserSession
+        fields = [
+            'id',
+            'user',
+            'session_name',
+            'session_activity',
+            'pdf_image_urls',
+            'document_embeddings',
+            'last_activity',
+        ]
+        read_only_fields = ['id', 'last_activity']
+
+    def initial_document_embeddings(self, pdf_public_url, specifications):
+        """
+        Initialize document embeddings for the session.
+        This method should be called after uploading the PDF and converting it to images.
+        """
+        file_translator = FileTranslator()
+        bot = AzureChatbot()
+        ocr_service = OCR()
+        public_img_urls = file_translator.convert_pdf_to_images(pdf_public_url)
+        ocr_texts = [ocr_service.extract_text_from_image(url) for url in public_img_urls]
+        finalized_text = bot.transform_document(ocr_texts, specifications)
+        return finalized_text
+    
+    def create():
+        validated_data = self.validated_data
+        user = validated_data['user']
+        session_name = validated_data['session_name']
+        session_activity = validated_data.get('specifications')
+        pdf_public_url = validated_data.get('pdf_public_url')
+
+        if pdf_public_url and session_activity:
+            document_embeddings = self.initial_document_embeddings(pdf_public_url, session_activity)
+        else:
+            document_embeddings = None
+
+        user_session = UserSession.objects.create(
+            user=user,
+            session_name=session_name,
+            session_activity=session_activity,
+            document_embeddings=document_embeddings
+        )
+        return user_session
+
+    def update(self, instance, validated_data):
+        instance.session_name = validated_data.get('session_name', instance.session_name)
+        instance.session_activity = validated_data.get('session_activity', instance.session_activity)
+        instance.save()
+        return instance 
