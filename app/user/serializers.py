@@ -145,16 +145,16 @@ class UserSessionSerializer(serializers.ModelSerializer):
         pdf_public_url = self.context['request'].data.get('pdf_public_url')
         specifications = self.context['request'].data.get('specifications')
 
-        session_name = bot.create_session_name(finalized_text)
 
         file_translator = FileTranslator()
         bot = AzureChatbot()
         ocr_service = OCR()
 
         if pdf_public_url:
-            public_img_urls = file_translator.convert_pdf_to_images(pdf_public_url)
-            ocr_texts = [ocr_service.extract_text_from_image(url) for url in public_img_urls]
+            public_img_urls = file_translator.pdf_to_images_and_store(pdf_public_url)
+            ocr_texts = [ocr_service.recognize_text(url) for url in public_img_urls]
             finalized_text = bot.transform_document(ocr_texts, specifications) if specifications else None
+            session_name = bot.create_session_name(finalized_text)  # or use timestamp
 
             user_session = UserSession.objects.create(
                 user=user,

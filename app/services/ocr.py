@@ -62,9 +62,9 @@ class OCR:
         return data
 
     def recognize_text(self, public_image_url: str = None):
-        endpoint = azure_ocr_endpoint
+        endpoint = f"{azure_ocr_endpoint}"
         url = f"{endpoint}computervision/imageanalysis:analyze?features=read&api-version=2023-10-01"
-        key = azure_ocr_access_key
+        key = f"{azure_ocr_access_key}"
         headers = {
             'Ocp-Apim-Subscription-Key': key,
             'Content-Type': 'application/json'
@@ -76,15 +76,23 @@ class OCR:
 
         try:
             data = response.json()
+            if "error" in data:
+                print(f"Azure OCR API error: {data['error']['message']}")
+                return ""
+
             result = self.from_dict(AnalyzeResult, data)
+
             final_result = ""
             for block in result.readResult.blocks:
                 for line in block.lines:
-                    final_result += line.text + "/n"
-            return final_result        
+                    final_result += line.text + "\n"
+            return final_result
 
         except Exception as e:
             print(f"Deserialization error: {e}")
+            return ""
 
 # if __name__ == "__main__":
-#     OCR().recognize_text()
+#     public_image_url = "https://fra.cloud.appwrite.io/v1/storage/buckets/685d78f0002b38b0ae92/files/685f83d0b9708d61058a/view?project=685d78c7002e37b728f0&mode=admin"
+#     text = OCR().recognize_text(public_image_url)
+#     print(text)
