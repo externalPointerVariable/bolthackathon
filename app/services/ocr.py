@@ -1,7 +1,7 @@
 import requests
 import json
 from dataclasses import dataclass, asdict, fields
-from config.config import azure_ocr_endpoint, azure_ocr_access_key
+# from config.config import azure_ocr_endpoint, azure_ocr_access_key
 from typing import List, Any, get_args
 
 @dataclass
@@ -62,9 +62,9 @@ class OCR:
         return data
 
     def recognize_text(self, public_image_url: str = None):
-        endpoint = f"{azure_ocr_endpoint}"
+        endpoint = f"https://ai-divyamsharmaai9392879369677762.cognitiveservices.azure.com/"
         url = f"{endpoint}computervision/imageanalysis:analyze?features=read&api-version=2023-10-01"
-        key = f"{azure_ocr_access_key}"
+        key = f"5HcK24kS7w4lNfrYhzUyNdWQHptz4XdrikCWP8TNO8sdHy9zTnCHJQQJ99BFACYeBjFXJ3w3AAAAACOGcnbe"
         headers = {
             'Ocp-Apim-Subscription-Key': key,
             'Content-Type': 'application/json'
@@ -92,7 +92,7 @@ class OCR:
             print(f"Deserialization error: {e}")
             return ""
 
-# if __name__ == "__main__":
-#     public_image_url = "https://fra.cloud.appwrite.io/v1/storage/buckets/685d78f0002b38b0ae92/files/685f83d0b9708d61058a/view?project=685d78c7002e37b728f0&mode=admin"
-#     text = OCR().recognize_text(public_image_url)
-#     print(text)
+if __name__ == "__main__":
+    public_image_url =  "https://fra.cloud.appwrite.io/v1/storage/buckets/685d78f0002b38b0ae92/files/685ffb95a39ef5432395/view?project=685d78c7002e37b728f0&mode=admin"
+    text = OCR().recognize_text(public_image_url)
+    print(text)

@@ -152,10 +152,9 @@ class UserSessionSerializer(serializers.ModelSerializer):
 
         if pdf_public_url:
             public_img_urls = file_translator.pdf_to_images_and_store(pdf_public_url)
-            ocr_texts = [ocr_service.recognize_text(url) for url in public_img_urls]
+            ocr_texts = [bot.image_to_text(url) for url in public_img_urls]
             finalized_text = bot.transform_document(ocr_texts, specifications) if specifications else None
             session_name = bot.create_session_name(finalized_text)  # or use timestamp
-
             user_session = UserSession.objects.create(
                 user=user,
                 session_name=session_name,
