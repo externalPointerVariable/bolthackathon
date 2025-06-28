@@ -1,12 +1,11 @@
 import os
 import requests
 from appwrite.client import Client
+from appwrite.input_file import InputFile
 from appwrite.services.storage import Storage
 from config.config import appwrite_api_key, appwrite_endpoint, appwrite_project_id, appwrite_bucket_id
 from pdf2image import convert_from_bytes
 from urllib.parse import urlparse
-from django.utils import timezone
-from user.models import UserSession
 
 
 class FileTranslator:
@@ -16,19 +15,17 @@ class FileTranslator:
         self.storage = Storage(self.client)
 
     def upload_file(self, file_path, remote_filename=None):
-        with open(file_path, 'rb') as f:
-            result = self.storage.create_file(
-                bucket_id=appwrite_bucket_id,
-                file_id='unique()',
-                file=f,
-                name=remote_filename or os.path.basename(file_path),
-                permissions=["read(\"*\")"]  # Make file public
-            )
+        input_file = InputFile.from_path(file_path)  # ✅ fix
+        result = self.storage.create_file(
+            bucket_id=appwrite_bucket_id,
+            file_id='unique()',
+            file=input_file
+        )
         file_id = result["$id"]
-        public_url = f"{appwrite_endpoint}/v1/storage/buckets/{appwrite_bucket_id}/files/{file_id}/view?project={appwrite_project_id}"
+        public_url = f"{appwrite_endpoint}/storage/buckets/{appwrite_bucket_id}/files/{file_id}/view?project={appwrite_project_id}"
         return public_url
 
-    def pdf_to_images_and_store(self, pdf_public_url, session_id, output_folder="output"):
+    def pdf_to_images_and_store(self, pdf_public_url, output_folder="output"):
         os.makedirs(output_folder, exist_ok=True)
 
         response = requests.get(pdf_public_url)
@@ -48,11 +45,6 @@ class FileTranslator:
 
             public_url = self.upload_file(filepath, remote_filename=filename)
             public_image_urls.append(public_url)
-
-        # Save public URLs to UserSession model
-        session = UserSession.objects.get(id=session_id)
-        session.pdf_image_urls = str(public_image_urls)  # or use json.dumps if preferred
-        session.last_activity = timezone.now()
-        session.save()
+        print(public_image_urls)
 
         return public_image_urls
