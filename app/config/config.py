@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 # Load environment variables from .env file
 load_dotenv()
 
+django_secret_key = os.getenv("DJANGO_SECRET_KEY")
 azure_chatbot_endpoint = os.getenv("AZURE_AI_CHATBOT_ENDPOINT")
 azure_chatbot_access_key = os.getenv("AZURE_AI_CHATBOT_KEY")
 azure_chatbot_deployment_name = os.getenv("AZURE_AI_CHATBOT_DEPLOYMENT_NAME")

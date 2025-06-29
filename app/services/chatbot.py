@@ -57,10 +57,10 @@ class AzureChatbot:
 
     def rag_chatbot(self, user_query: str, context_doc: Any,
                     max_tokens: int = 4096, temperature: float = 1.0, top_p: float = 1.0,
-                    vector_embeddings=None):
+                    prev_chat_context=None):
         response = self.client.chat.completions.create(
             messages=[
-                {"role": "system", "content": f"You are a helpful assistant which only provides information from {context_doc} if not provide raise the issue."},
+                {"role": "system", "content": f"You are a helpful assistant which only provides information from {context_doc} while also considering previous chat context: {prev_chat_context}."},
                 {"role": "user", "content": user_query}
             ],
             max_tokens=max_tokens,
