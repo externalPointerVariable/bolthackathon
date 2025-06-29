@@ -161,6 +161,12 @@ class UserSessionSerializer(serializers.ModelSerializer):
                 ocr_text="\n".join(ocr_texts) if ocr_texts else None,
                 document_embeddings=finalized_text
             )
+
+            ChatSessions.objects.create(
+                session=user_session,
+                chat_history=[]
+            )
+
             return user_session
 
         raise serializers.ValidationError("pdf_public_url is required.")
@@ -200,12 +206,42 @@ class ChatSessionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatSessions
         fields = ['id', 'session', 'chat_history']
-        read_only_fields = ['id', 'session']
-
-    def create(self, validated_data):
-        return ChatSessions.objects.create(**validated_data)
+        read_only_fields = ['id', 'session', 'chat_history']
 
     def update(self, instance, validated_data):
-        instance.chat_history = validated_data.get('chat_history', instance.chat_history)
+        request = self.context['request']
+        user_query = request.data.get('user_query')
+        session_id = request.data.get('session_id')
+
+        if not user_query:
+            raise serializers.ValidationError({"user_query": "This field is required."})
+        if not session_id:
+            raise serializers.ValidationError({"session_id": "This field is required."})
+
+        try:
+            session_data = UserSession.objects.get(id=session_id, user=request.user)
+        except UserSession.DoesNotExist:
+            raise serializers.ValidationError({"error": "Invalid session or not authorized."})
+
+        context_doc = session_data.ocr_text
+        if not context_doc:
+            raise serializers.ValidationError({"error": "Context document is required for chatbot interaction."})
+
+        chat_history = instance.chat_history or []
+
+        # Get response from chatbot
+        bot = AzureChatbot()
+        response = bot.rag_chatbot(user_query, context_doc, prev_chat_context=chat_history[-15:])
+
+        # Append new entry to chat history
+        chat_history.append({
+            "user_query": user_query,
+            "response": response
+        })
+
+        # Save updated history
+        instance.chat_history = chat_history
         instance.save()
-        return instance
+
+        # Return both instance and response for custom use
+        return [instance, {"response": response}]

@@ -34,5 +34,5 @@ urlpatterns = [
     path("user-sessions/create/", UserSessionView.as_view(), name="create-user-session"),
     path("user-sessions/", UserSessionView.as_view(), name="user-session-list"),
     path("user-sessions/<int:pk>/", UserSessionDetailView.as_view(), name="user-session-detail"),
-    path("user_sessions/<int:pk>/chat-sessions/", ChatSessionsView.as_view(), name="chat-sessions-list"),
+    path("user_sessions/<int:session_id>/chat-sessions/", ChatSessionsView.as_view(), name="chat-sessions-list"),
 ]

@@ -7,7 +7,7 @@ from .models import UserSession, ChatSessions
 from rest_framework.views import APIView
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator
-from .serializers import RegisterSerializer, LoginSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer, UserProfileSerializer, UserSessionSerializer, UserSessionDetailSerializer
+from .serializers import RegisterSerializer, LoginSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer, UserProfileSerializer, UserSessionSerializer, UserSessionDetailSerializer, ChatSessionsSerializer
 
 class RegisterView(CreateAPIView):
     queryset = User.objects.all()
@@ -118,16 +118,27 @@ class ChatSessionsView(APIView):
 
     def get(self, request, session_id, format=None):
         try:
-            chat_sessions = ChatSessions.objects.filter(session__id=session_id)
-        except ChatSessions.DoesNotExist:
-            return Response({"error": "Chat sessions not found"}, status=status.HTTP_404_NOT_FOUND)
+            user_session = UserSession.objects.get(id=session_id, user=request.user)
+        except UserSession.DoesNotExist:
+            return Response({"error": "User session not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = UserSessionSerializer(chat_sessions, many=True, context={'request': request})
+        chat_sessions = ChatSessions.objects.filter(session=user_session)
+        serializer = ChatSessionsSerializer(chat_sessions, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def post(self, request, session_id, format=None):
-        serializer = UserSessionSerializer(data=request.data, context={'request': request})
+    def put(self, request, session_id, format=None):
+        try:
+            user_session = UserSession.objects.get(id=session_id, user=request.user)
+            chat_session = ChatSessions.objects.get(session=user_session)
+        except (UserSession.DoesNotExist, ChatSessions.DoesNotExist):
+            return Response({"error": "Chat session not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        request.data['session_id'] = session_id
+        serializer = ChatSessionsSerializer(chat_session, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
-            chat_session = serializer.save()
-            return Response(UserSessionSerializer(chat_session).data, status=status.HTTP_201_CREATED)
+            instance, extra = serializer.save()
+            return Response({
+                "chat_session": ChatSessionsSerializer(instance).data,
+                "response": extra["response"]
+            }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -13,6 +13,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -24,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-qjxhd5p_^wm^8o(#jbw(8($*_y4b8cjn01paavrvytf9uy5yz6'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = []
 
@@ -61,6 +62,7 @@ OTP_SETTINGS = {
 
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -70,9 +72,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# CORS_ALLOWED_ORIGINS = ["http://127.0.0.1:5173",
-# ] # Allow request from these domains
-
+CORS_ALLOWED_ORIGINS = ["http://127.0.0.1:5173",
+] # Allow request from these domains
 CORS_ALLOW_ALL_ORIGINS = True # Allow request from any domain
 
 
