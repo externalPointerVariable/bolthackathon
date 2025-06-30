@@ -137,32 +137,37 @@ class UserSessionSerializer(serializers.ModelSerializer):
     def get_pdf_image_urls(self, obj):
         try:
             return json.loads(obj.pdf_image_urls or "[]")
-        except Exception:
+        except (TypeError, ValueError):
             return []
 
     def create(self, validated_data):
-        user = self.context['request'].user
-        pdf_public_url = self.context['request'].data.get('pdf_public_url')
-        specifications = self.context['request'].data.get('specifications')
+        request = self.context['request']
+        user = request.user
+        pdf_public_url = request.data.get('pdf_public_url')
+        specifications = request.data.get('specifications', {})
+
+        if not pdf_public_url:
+            raise serializers.ValidationError({"pdf_public_url": "This field is required."})
 
         file_translator = FileTranslator()
         bot = AzureChatbot()
 
-        if pdf_public_url:
+        try:
             public_img_urls = file_translator.pdf_to_images_and_store(pdf_public_url)
             ocr_texts = [bot.image_to_text(url) for url in public_img_urls]
+
             finalized_text = bot.transform_document(ocr_texts, specifications) if specifications else None
-            session_name = bot.create_session_name(finalized_text)
+            session_name = bot.create_session_name(finalized_text or "\n".join(ocr_texts))
             session_keywords = bot.keywords_extraction(ocr_texts) if ocr_texts else None
 
             user_session = UserSession.objects.create(
                 user=user,
                 session_name=session_name,
-                session_activity=specifications,
+                session_activity=specifications,  # JSONField can take dict directly
                 session_keywords=session_keywords,
                 pdf_image_urls=json.dumps(public_img_urls),
-                ocr_text="\n".join(ocr_texts) if ocr_texts else None,
-                document_embeddings=finalized_text
+                ocr_text="\n".join(ocr_texts) if ocr_texts else "",
+                document_embeddings=finalized_text or {}
             )
 
             ChatSessions.objects.create(
@@ -172,7 +177,8 @@ class UserSessionSerializer(serializers.ModelSerializer):
 
             return user_session
 
-        raise serializers.ValidationError("pdf_public_url is required.")
+        except Exception as e:
+            raise serializers.ValidationError({"error": f"Failed to create session: {str(e)}"})
 
     def update(self, instance, validated_data):
         instance.session_name = validated_data.get('session_name', instance.session_name)

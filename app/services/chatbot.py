@@ -59,10 +59,20 @@ class AzureChatbot:
                     max_tokens: int = 4096, temperature: float = 1.0, top_p: float = 1.0,
                     prev_chat_context=None):
         response = self.client.chat.completions.create(
-            messages=[
-                {"role": "system", "content": f"You are a helpful assistant which only provides information from {context_doc} while also considering previous chat context: {prev_chat_context}."},
-                {"role": "user", "content": user_query}
-            ],
+           messages = [
+                        {
+                            "role": "system",
+                            "content": (
+                                f"You are a helpful and concise assistant. Answer the user's queries using only the information provided in the following document:\n\n{context_doc}\n\n"
+                                f"Also, take into account the relevant context from the previous conversation:\n\n{prev_chat_context}\n\n"
+                                "If the answer cannot be found in the document or prior context, respond with 'I don't have enough information to answer that.'"
+                            )
+                        },
+                        {
+                            "role": "user",
+                            "content": user_query
+                        }
+                    ],
             max_tokens=max_tokens,
             temperature=temperature,
             top_p=top_p,
@@ -72,10 +82,22 @@ class AzureChatbot:
     
     def transform_document(self, document_text: Any, specifactions: Any):
         response = self.client.chat.completions.create(
-            messages=[
-                {"role": "system", "content": f"You are a helpful assistant that transforms documents according to the provided specification {specifactions}."},
-                {"role": "user", "content": f"Transform the following document text according to the specifications: {specifactions}\n\nDocument Text: {document_text} leave the tanle and diagram as it is and also the numericals"}
-            ],
+            messages = [
+                        {
+                            "role": "system",
+                            "content": (
+                                f"You are a precise and helpful assistant. Your task is to transform documents strictly based on the following specifications:\n\n{specifactions}\n\n"
+                                "Preserve all tables, diagrams, and numerical data exactly as they appear in the original text. Do not alter their formatting or content."
+                            )
+                        },
+                        {
+                            "role": "user",
+                            "content": (
+                                f"Please transform the document below according to the specifications provided.\n\n"
+                                f"Document Text:\n{document_text}"
+                            )
+                        }
+                    ],
             temperature=0.7,
             top_p=1.0,
             model=self.model
@@ -85,10 +107,20 @@ class AzureChatbot:
     
     def create_session_name(self, final_documnt: Any):
         response = self.client.chat.completions.create(
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that generates unique session names."},
-                {"role": "user", "content": f"Generate a unique session name for a user session based on the following document: {final_documnt}"}
-            ],
+            messages = [
+                            {
+                                "role": "system",
+                                "content": (
+                                    "You are a creative and helpful assistant. Your task is to generate a unique, concise session name (maximum 100 characters) that summarizes or represents the core idea of the provided document."
+                                )
+                            },
+                            {
+                                "role": "user",
+                                "content": (
+                                    f"Based on the following document content, generate a unique and meaningful session name:\n\n{final_documnt}"
+                                )
+                            }
+                        ],
             temperature=0.7,
             top_p=1.0,
             model=self.model
@@ -98,10 +130,22 @@ class AzureChatbot:
     
     def keywords_extraction(self, document_text: Any):
         response = self.client.chat.completions.create(
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that extracts keywords from documents."},
-                {"role": "user", "content": f"Extract keywords from the following document text: {document_text}"}
-            ],
+            messages = [
+                            {
+                                "role": "system",
+                                "content": (
+                                    "You are a helpful and precise assistant. Your task is to extract the most relevant and meaningful keywords from a given document."
+                                    " Focus on nouns, noun phrases, technical terms, and key concepts. Avoid generic or overly common words."
+                                )
+                            },
+                            {
+                                "role": "user",
+                                "content": (
+                                    f"Extract the top keywords from the following document text. Present them as a comma-separated list or in bullet points:\n\n{document_text}"
+                                )
+                            }
+                        ],
+            max_tokens=150,
             temperature=0.7,
             top_p=1.0,
             model=self.model
