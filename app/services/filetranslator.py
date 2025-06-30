@@ -45,10 +45,6 @@ class FileTranslator:
 
             public_url = self.upload_file(filepath, remote_filename=filename)
             public_image_urls.append(public_url)
-            try:
-                os.remove(filepath)
-            except OSError as e:
-                print(f"Error removing file {filepath}: {e}")
         print(public_image_urls)
 
         return public_image_urls

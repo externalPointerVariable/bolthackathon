@@ -16,7 +16,7 @@ class UserProfile(models.Model):
 
 class UserSession(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sessions')
-    session_name = models.CharField(max_length=40, unique=True)
+    session_name = models.CharField(max_length=225)
     session_activity = models.JSONField(blank=True, null=True)
     session_keywords = models.TextField(blank=True, null=True)
     pdf_image_urls = models.TextField(blank=True, null=True)
