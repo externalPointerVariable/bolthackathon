@@ -95,6 +95,19 @@ class AzureChatbot:
         )
         session_name = response.choices[0].message.content.strip()
         return session_name
+    
+    def keywords_extraction(self, document_text: Any):
+        response = self.client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that extracts keywords from documents."},
+                {"role": "user", "content": f"Extract keywords from the following document text: {document_text}"}
+            ],
+            temperature=0.7,
+            top_p=1.0,
+            model=self.model
+        )
+        keywords = response.choices[0].message.content.strip()
+        return keywords
 
 # if __name__ == "__main__":
 
