@@ -127,6 +127,7 @@ class UserSessionSerializer(serializers.ModelSerializer):
             'user',
             'session_name',
             'session_activity',
+            'session_keywords',
             'pdf_image_urls',
             'document_embeddings',
             'last_activity',
@@ -152,11 +153,13 @@ class UserSessionSerializer(serializers.ModelSerializer):
             ocr_texts = [bot.image_to_text(url) for url in public_img_urls]
             finalized_text = bot.transform_document(ocr_texts, specifications) if specifications else None
             session_name = bot.create_session_name(finalized_text)
+            session_keywords = bot.keywords_extraction(ocr_texts) if ocr_texts else None
 
             user_session = UserSession.objects.create(
                 user=user,
                 session_name=session_name,
                 session_activity=specifications,
+                session_keywords=session_keywords,
                 pdf_image_urls=json.dumps(public_img_urls),
                 ocr_text="\n".join(ocr_texts) if ocr_texts else None,
                 document_embeddings=finalized_text
