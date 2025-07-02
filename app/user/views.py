@@ -113,6 +113,15 @@ class UserSessionDetailView(APIView):
             return Response(UserSessionDetailSerializer(updated_session, context={'request': request}).data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+    def delete(self, request, pk, format=None):
+        try:
+            user_session = UserSession.objects.get(pk=pk, user=request.user)
+        except UserSession.DoesNotExist:
+            return Response({"error": "User session not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        user_session.delete()
+        return Response({"message": "User session deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+    
 class ChatSessionsView(APIView):
     permission_classes = [IsAuthenticated]
 

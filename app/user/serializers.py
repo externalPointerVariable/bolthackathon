@@ -216,7 +216,12 @@ class UserSessionDetailSerializer(serializers.ModelSerializer):
         instance.session_keywords = session_keywords
 
         instance.save()
+        return instance
 
+    def delete(self, instance):
+        UserSession.objects.filter(id=instance.id).delete()
+        # Delete the user session itself
+        instance.delete()
         return instance
 
 
