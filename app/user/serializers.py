@@ -218,12 +218,6 @@ class UserSessionDetailSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-    def delete(self, instance):
-        UserSession.objects.filter(id=instance.id).delete()
-        # Delete the user session itself
-        instance.delete()
-        return instance
-
 
 class ChatSessionsSerializer(serializers.ModelSerializer):
     class Meta:

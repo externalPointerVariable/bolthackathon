@@ -112,7 +112,7 @@ class UserSessionDetailView(APIView):
             updated_session = serializer.save()
             return Response(UserSessionDetailSerializer(updated_session, context={'request': request}).data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     def delete(self, request, pk, format=None):
         try:
             user_session = UserSession.objects.get(pk=pk, user=request.user)
