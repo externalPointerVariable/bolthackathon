@@ -6,6 +6,7 @@ from appwrite.services.storage import Storage
 from config.config import appwrite_api_key, appwrite_endpoint, appwrite_project_id, appwrite_bucket_id
 from pdf2image import convert_from_bytes
 from urllib.parse import urlparse
+from io import BytesIO
 
 
 class FileTranslator:
@@ -25,9 +26,7 @@ class FileTranslator:
         public_url = f"{appwrite_endpoint}/storage/buckets/{appwrite_bucket_id}/files/{file_id}/view?project={appwrite_project_id}"
         return public_url
 
-    def pdf_to_images_and_store(self, pdf_public_url, output_folder="output"):
-        os.makedirs(output_folder, exist_ok=True)
-
+    def pdf_to_images_and_store(self, pdf_public_url):
         response = requests.get(pdf_public_url)
         if response.headers.get("Content-Type") != "application/pdf":
             raise ValueError("Invalid content type, expected PDF.")
@@ -40,11 +39,20 @@ class FileTranslator:
 
         for i, image in enumerate(images):
             filename = f"{pdf_name}_page_{i+1}.jpg"
-            filepath = os.path.join(output_folder, filename)
-            image.save(filepath, "JPEG")
 
-            public_url = self.upload_file(filepath, remote_filename=filename)
+            buffer = BytesIO()
+            image.save(buffer, format="JPEG")
+            buffer.seek(0)
+
+            input_file = InputFile.from_bytes(buffer.read(), filename=filename)
+            result = self.storage.create_file(
+                bucket_id=appwrite_bucket_id,
+                file_id='unique()',
+                file=input_file
+            )
+            file_id = result["$id"]
+            public_url = f"{appwrite_endpoint}/storage/buckets/{appwrite_bucket_id}/files/{file_id}/view?project={appwrite_project_id}"
             public_image_urls.append(public_url)
-        print(public_image_urls)
 
+        print(public_image_urls)
         return public_image_urls

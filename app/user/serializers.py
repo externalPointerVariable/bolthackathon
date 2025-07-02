@@ -206,10 +206,18 @@ class UserSessionDetailSerializer(serializers.ModelSerializer):
         instance.session_name = validated_data.get('session_name', instance.session_name)
         instance.session_activity = validated_data.get('session_activity', instance.session_activity)
         ocr_text = instance.ocr_text or validated_data.get('ocr_text', None)
+
+        # Generate document embeddings
         document_embeddings = bot.transform_document(ocr_text, instance.session_activity)
         instance.document_embeddings = document_embeddings
+
+        # Extract and assign session keywords
+        session_keywords = bot.extract_keywords(ocr_text)
+        instance.session_keywords = session_keywords
+
         instance.save()
         return instance
+
 
 class ChatSessionsSerializer(serializers.ModelSerializer):
     class Meta:
